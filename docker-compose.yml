@@ -1,0 +1,55 @@
+# version: '3'
+services:
+  db:
+    container_name:
+      dbTask
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PWD}
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    ports:
+      - "5433:5432"
+    networks:
+      - new_task_proga
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    container_name: master-server
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    ports:
+      - '3000:3000'
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USER}
+      - DB_PASSWORD=${DB_PWD}
+      - DB_PORT=${DB_PORT}
+      - DB_HOST=db
+    networks:
+      - new_task_proga
+  
+  client:
+    depends_on:
+      - server
+    container_name: master-client
+    build:
+      context: ./front/my-app
+      dockerfile: Dockerfile
+    ports:
+      - '80:80'
+    restart: always
+    networks:
+    - new_task_proga
+ 
+networks:
+  new_task_proga:
+
+volumes:
+  pgdata:
